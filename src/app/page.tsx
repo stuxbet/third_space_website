@@ -1,6 +1,42 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 
 export default function Page() {
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    setStatus("loading");
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error ?? "Unable to join right now");
+      }
+
+      form.reset();
+      setStatus("success");
+      setMessage("You're on the list. We'll text when the doors open.");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Something went wrong");
+    }
+  };
+
   return (
     <main className="text-foreground">
       <section className="border-b border-border/70 bg-[#F2E900] py-24">
@@ -79,7 +115,10 @@ export default function Page() {
                 Drop your number to get the encrypted ping when the café doors unlock.
               </p>
             </div>
-            <form className="cyber-glow angular-shell angular-border panel-angular mx-auto flex max-w-xl flex-col gap-3 bg-black/70 p-6 shadow-[0_0_32px_rgba(2,215,242,0.25)] backdrop-blur [--angle-border-color:rgba(2,215,242,0.45)]" action="#" method="post">
+            <form
+              className="cyber-glow angular-shell angular-border panel-angular mx-auto flex max-w-xl flex-col gap-3 bg-black/70 p-6 shadow-[0_0_32px_rgba(2,215,242,0.25)] backdrop-blur [--angle-border-color:rgba(2,215,242,0.45)]"
+              onSubmit={handleSubmit}
+            >
               <div className="flex flex-col gap-3 sm:flex-row">
                 <label htmlFor="waitlist-phone" className="sr-only">
                   Phone number
@@ -94,13 +133,25 @@ export default function Page() {
                   placeholder="Enter your phone number"
                   className="w-full rounded-lg border border-[#02D7F2]/40 bg-black/60 px-4 py-3 text-base text-white outline-none transition focus:border-[#02D7F2] focus:ring-2 focus:ring-[#02D7F2]/60"
                 />
-                <Button type="submit" className="w-full sm:w-auto">
-                  Submit
+                <input type="hidden" name="source" value="landing-page" />
+                <Button type="submit" className="w-full sm:w-auto" disabled={status === "loading"}>
+                  {status === "loading" ? "Submitting..." : "Submit"}
                 </Button>
               </div>
               <span className="mt-2 block text-xs uppercase tracking-[0.3em] text-[#F2E900]/70">
                 Limited seats · zero spam
               </span>
+              {message && (
+                <p
+                  className={`text-sm ${
+                    status === "success" ? "text-[#02D7F2]" : "text-red-400"
+                  }`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {message}
+                </p>
+              )}
             </form>
           </div>
         </div>
