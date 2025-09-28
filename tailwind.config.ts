@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 import animatePlugin from "tailwindcss-animate";
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: ["class", ".dark"],
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{ts,tsx}",

@@ -1,11 +1,18 @@
 import { kv } from "@vercel/kv";
 import { NextResponse } from "next/server";
-import parsePhoneNumber from "libphonenumber-js";
+import {
+  CountryCode,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js";
 
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_PHONE_REGION ?? "US";
 
 function normalizePhone(raw: string) {
-  const parsed = parsePhoneNumber(raw, DEFAULT_REGION);
+  const region =
+    DEFAULT_REGION && DEFAULT_REGION.length === 2
+      ? (DEFAULT_REGION.toUpperCase() as CountryCode)
+      : undefined;
+  const parsed = parsePhoneNumberFromString(raw, region);
   if (!parsed || !parsed.isValid()) {
     throw new Error("INVALID_PHONE");
   }
